@@ -1,0 +1,48 @@
+---
+- name: check os version
+  fail: msg='OS is NOT CentOS 7.x'
+  when: ansible_distribution != 'CentOS' or ansible_distribution_major_version != '7'
+
+- name: Installing EPEL
+  yum:
+    state: present
+    name:
+      - etcd
+      - haproxy
+
+- name: Set SELinux in permissive mode until the machine is rebooted
+  command: setenforce 0
+  ignore_errors: true
+  changed_when: false
+
+- name: Copy etcd config file
+  copy:
+    src: "{{ item }}"
+    dest: /etc/etcd/
+    owner: root
+    mode: 0644
+  with_items:
+    - etcd.conf
+
+- name: Copy haproxy config file
+  copy:
+    src: "{{ item }}"
+    dest: /etc/haproxy/
+    owner: root
+    mode: 0644
+  with_items:
+    - haproxy.cfg
+
+- name: Start etcd service
+  service:
+    name: "etcd"
+    state: "started"
+    enabled: yes
+  become: true
+
+- name: Start haproxy service
+  service:
+    name: "haproxy"
+    state: "started"
+    enabled: yes
+  become: true

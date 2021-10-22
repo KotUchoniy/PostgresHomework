@@ -1,0 +1,35 @@
+- name: Set SELinux in permissive mode until the machine is rebooted
+  command: setenforce 0
+  ignore_errors: true
+  changed_when: false
+
+- name: Stop PostgreSQL service
+  service:
+    name: "postgresql-10"
+    state: "stopped"
+    enabled: no
+  become: true
+
+- name: Copy patroni config file
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+    owner: root
+    mode: 0644
+
+- name: Copy patroni service file
+  copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/
+    owner: root
+    mode: 0644
+  with_items:
+    - patroni.service
+
+- name: Start Patroni service
+  service:
+    name: "patroni"
+    state: "started"
+    enabled: yes
+  become: true
+

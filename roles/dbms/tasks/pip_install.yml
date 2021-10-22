@@ -1,0 +1,17 @@
+---
+#- name: Updating pip and setuptools
+#  pip:
+#    executable: pip3
+#    umask: 0022
+#    name: 
+#      - pip3
+#    state: latest
+
+- name: Installing the required pip packages
+  pip:
+    executable: pip3
+    umask: '0022'
+    name: 
+      - psycopg2-binary
+      - patroni
+      - python-etcd

@@ -1,0 +1,27 @@
+---
+- name: check os version
+  fail: msg='OS is NOT CentOS 7.x'
+  when: ansible_distribution != 'CentOS' or ansible_distribution_major_version != '7'
+
+- name: Add repository PostgreSQL10
+  yum_repository:
+    name: postgresql10
+    description: PostgreSQL10 repository
+    baseurl: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-$releasever-$basearch
+    gpgcheck: no
+
+- name: install postgresql packages
+  become: true
+  yum:
+    state: present
+    name:
+      - postgresql10-server
+      - postgresql10-devel
+      - python-psycopg2
+      - python
+      - python3-pip
+      - python3-setuptools
+      - python-setuptools
+      - python-devel
+      - python3-devel
+      - gcc

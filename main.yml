@@ -1,0 +1,75 @@
+---
+- hosts: dbms
+  tags: database
+  environment:
+      PATH: /usr/pgsql-10/bin/:{{ ansible_env.PATH }}
+  become: true
+  roles:
+    - role: dbms
+
+- hosts: backend
+  tags: php-fpm
+  become: true
+  roles:
+    - role: backend
+
+- hosts: nginx
+  tags: nginx
+  become: true
+  roles:
+    - role: nginx
+
+- hosts: load_balancer
+  tags: load_balancer
+  become: true
+  roles:
+    - role: load_balancer
+
+- hosts: dbms1
+  environment:
+      PATH: /usr/pgsql-10/bin/:{{ ansible_env.PATH }}
+  become: true
+  tasks:
+#    - pause: seconds=30
+    - name: Create test database PostgreSQL 4 Linux
+      when:
+        - ansible_system == 'Linux'
+      become: yes
+      become_user: postgres
+      vars:
+        otus_database: otus_db
+        otus_user: otus
+        otus_password: student
+        password_for_default_postgres_user: strong_pass
+      block:
+#        - postgresql_user:
+#            name: postgres
+#            password: '{{ password_for_default_postgres_user }}'
+        - postgresql_db:
+            login_host: 192.168.7.171
+            login_password: '{{ password_for_default_postgres_user }}'
+            db: '{{ otus_database }}'
+            encoding: UTF-8
+            template: 'template0'
+            state: present
+        - postgresql_db:
+            db: '{{ otus_database }}'
+            owner: '{{ otus_user }}'
+            login_host: 192.168.7.171
+            login_password: '{{ password_for_default_postgres_user }}'
+            encoding: UTF-8
+            state: present
+        - postgresql_privs:
+            database: '{{ otus_database }}'
+            state: present
+            host: 192.168.7.171
+            privs: '{{ item }}'
+            type: database
+            roles: '{{ otus_user }}'
+            login: '{{ otus_user }}'
+            password: '{{ otus_password }}'
+          with_items:
+            - CREATE
+            - CONNECT
+            - TEMPORARY
+
